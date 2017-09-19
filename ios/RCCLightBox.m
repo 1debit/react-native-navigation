@@ -15,6 +15,7 @@ const NSInteger kLightBoxTag = 0x101010;
 @property (nonatomic, strong) UIView *overlayColorView;
 @property (nonatomic, strong) NSDictionary *params;
 @property (nonatomic)         BOOL yellowBoxRemoved;
+@property (nonatomic)         BOOL isDismissing;
 @end
 
 @implementation RCCLightBoxView
@@ -42,7 +43,7 @@ const NSInteger kLightBoxTag = 0x101010;
                 self.visualEffectView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
                 [self addSubview:self.visualEffectView];
             }
-
+            
             if (style[@"backgroundColor"] != nil)
             {
                 UIColor *backgroundColor = [RCTConvert UIColor:style[@"backgroundColor"]];
@@ -54,7 +55,7 @@ const NSInteger kLightBoxTag = 0x101010;
                     [self addSubview:self.overlayColorView];
                 }
             }
-
+            
             if (style[@"tapBackgroundToDismiss"] != nil && [RCTConvert BOOL:style[@"tapBackgroundToDismiss"]])
             {
                 UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissAnimated)];
@@ -167,28 +168,30 @@ const NSInteger kLightBoxTag = 0x101010;
     self.reactView.transform = CGAffineTransformMakeTranslation(0, 100);
     self.reactView.alpha = 0;
     [UIView animateWithDuration:0.6 delay:0.2 usingSpringWithDamping:0.65 initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseOut animations:^()
-    {
-        self.reactView.transform = CGAffineTransformIdentity;
-        self.reactView.alpha = 1;
-    } completion:nil];
+     {
+         self.reactView.transform = CGAffineTransformIdentity;
+         self.reactView.alpha = 1;
+     } completion:nil];
 }
 
 -(void)dismissAnimated
 {
+    self.isDismissing = YES;
+    
     BOOL hasOverlayViews = (self.visualEffectView != nil || self.overlayColorView != nil);
     
     [UIView animateWithDuration:0.2 animations:^()
-    {
-        self.reactView.transform = CGAffineTransformMakeTranslation(0, 80);
-        self.reactView.alpha = 0;
-    }
+     {
+         self.reactView.transform = CGAffineTransformMakeTranslation(0, 80);
+         self.reactView.alpha = 0;
+     }
                      completion:^(BOOL finished)
-    {
-        if (!hasOverlayViews)
-        {
-            [self removeFromSuperview];
-        }
-    }];
+     {
+         if (!hasOverlayViews)
+         {
+             [self removeFromSuperview];
+         }
+     }];
     
     if (hasOverlayViews)
     {
@@ -218,11 +221,12 @@ const NSInteger kLightBoxTag = 0x101010;
 +(void)showWithParams:(NSDictionary*)params
 {
     UIViewController *viewController = RCTPresentedViewController();
-    if ([viewController.view viewWithTag:kLightBoxTag] != nil)
+    RCCLightBoxView *previousLightBox = [viewController.view viewWithTag:kLightBoxTag];
+    if (previousLightBox != nil && !previousLightBox.isDismissing)
     {
         return;
     }
-
+    
     RCCLightBoxView *lightBox = [[RCCLightBoxView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height) params:params];
     lightBox.tag = kLightBoxTag;
     [viewController.view addSubview:lightBox];
@@ -240,3 +244,4 @@ const NSInteger kLightBoxTag = 0x101010;
 }
 
 @end
+
