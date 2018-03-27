@@ -57,6 +57,7 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
     static NavigationActivity currentActivity;
     private static Promise startAppPromise;
 
+    private boolean resettingContext;
     private ActivityParams activityParams;
     private ModalController modalController;
     private Layout layout;
@@ -70,6 +71,7 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
                 getIntent() == null ||
                 getIntent().getBundleExtra("ACTIVITY_PARAMS_BUNDLE") == null) {
             SplashActivity.start(this);
+            resettingContext = true;
             finish();
             return;
         }
@@ -149,18 +151,22 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
     @Override
     protected void onPause() {
         super.onPause();
-        currentActivity = null;
-        IntentDataHandler.onPause(getIntent());
-        getReactGateway().onPauseActivity(this);
-        NavigationApplication.instance.getActivityCallbacks().onActivityPaused(this);
-        EventBus.instance.unregister(this);
+        if (!resettingContext) {
+            currentActivity = null;
+            IntentDataHandler.onPause(getIntent());
+            getReactGateway().onPauseActivity(this);
+            NavigationApplication.instance.getActivityCallbacks().onActivityPaused(this);
+            EventBus.instance.unregister(this);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        clearStartAppPromise();
-        NavigationApplication.instance.getActivityCallbacks().onActivityStopped(this);
+        if (!resettingContext) {
+            clearStartAppPromise();
+            NavigationApplication.instance.getActivityCallbacks().onActivityStopped(this);
+        }
     }
 
     private void clearStartAppPromise() {
@@ -171,9 +177,11 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
 
     @Override
     protected void onDestroy() {
-        destroyLayouts();
-        destroyJsIfNeeded();
-        NavigationApplication.instance.getActivityCallbacks().onActivityDestroyed(this);
+        if (!resettingContext) {
+            destroyLayouts();
+            destroyJsIfNeeded();
+            NavigationApplication.instance.getActivityCallbacks().onActivityDestroyed(this);
+        }
         super.onDestroy();
     }
 
