@@ -205,6 +205,11 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
         super.onConfigurationChanged(newConfig);
     }
 
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+       // Trying to prevent any possible crash when the OS restore the instance
+    }
+
     void push(ScreenParams params) {
         if (modalController.containsNavigator(params.getNavigatorId())) {
             modalController.push(params);
