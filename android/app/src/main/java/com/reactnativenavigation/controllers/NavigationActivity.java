@@ -202,6 +202,11 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
     }
 
     @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Trying to prevent any possible crash when the OS restore the instance
+    }
+
+    @Override
     public void invokeDefaultOnBackPressed() {
         if (layout != null && !layout.onBackPressed()) {
             super.onBackPressed();
