@@ -160,7 +160,6 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
     protected void onPause() {
         super.onPause();
         if (!resettingContext) {
-            currentActivity = null;
             IntentDataHandler.onPause(getIntent());
             getReactGateway().onPauseActivity(this);
             NavigationApplication.instance.getActivityCallbacks().onActivityPaused(this);
@@ -204,7 +203,8 @@ public class NavigationActivity extends AppCompatActivity implements DefaultHard
     }
 
     private void destroyJsIfNeeded() {
-        if (currentActivity == null || currentActivity.isFinishing()) {
+        if (currentActivity == this || currentActivity.isFinishing()) {
+            currentActivity = null;
             getReactGateway().onDestroyApp(this);
         }
     }
